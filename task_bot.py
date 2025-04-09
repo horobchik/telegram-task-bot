@@ -103,7 +103,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 def main() -> None:
     """Точка входу програми"""
-    application = Application.builder().token("ВАШ_ТОКЕН").build()
+    application = Application.builder().token("7615231270:AAHWyL3-QGY6GUYFM46D5UP-dcAEQCymlEw").build()
     
     # Додавання обробників
     application.add_handler(CommandHandler("start", start))
