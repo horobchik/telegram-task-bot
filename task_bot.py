@@ -190,9 +190,11 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         ]
         status = user_data[user_id]['statuses'][task_index]
         await query.edit_message_text(
-            text=f"〰️     <b>Завдання {task_index+1}<b>:\n{status}{user_data[user_id]['tasks'][task_index]}",
+            text=f"〰️     <b>Завдання {task_index+1}<b>:\n{status}{user_data[user_id]['tasks'][task_index],reply_markup=InlineKeyboardMarkup(rules_keyboard),
+    parse_mode="HTML"}",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
+
 
 def main() -> None:
     """Запуск бота"""
