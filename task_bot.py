@@ -148,12 +148,12 @@ async def send_all_tasks(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             ]
         ]
         
-        status = user_data[user_id]['statuses'][i]
+       status = user_data[user_id]['statuses'][i]
         await context.bot.send_message(
             chat_id=user_id,
-            text=f"<b>📌 Завдання {i+1}:<b>\n{status}{task}",
+            text=f"📌 Завдання {i+1}:\n{status}{task}",
             reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode="HTML"
+            
         )
 
 async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
