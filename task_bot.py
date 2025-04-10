@@ -98,7 +98,7 @@ TASK_EXAMPLES = [
 def generate_tasks():
     """Генерує 6 унікальних завдань"""
     return random.sample(TASK_EXAMPLES, 6)
-]
+
 
 user_data = {}
 
