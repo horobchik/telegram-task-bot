@@ -148,9 +148,10 @@ async def send_all_tasks(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             ]
         ]
         
-       status = user_data[user_id]['statuses'][task_index]
-        await query.edit_message_text(
-            text=f"〰️     <b>Завдання {task_index+1}<b>:\n{status}{user_data[user_id]['tasks'][task_index]}",
+        status = user_data[user_id]['statuses'][i]
+        await context.bot.send_message(
+            chat_id=user_id,
+            text=f"📌 Завдання {i+1}:\n{status}{task}",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
@@ -187,11 +188,10 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
                 InlineKeyboardButton("🔁 Замінити", callback_data=f"replace_{task_index}")
             ]
         ]
-         status = user_data[user_id]['statuses'][task_index]
+        status = user_data[user_id]['statuses'][task_index]
         await query.edit_message_text(
-            text=f"〰️     <b>Завдання {task_index+1}<b>:\n{status}{user_data[user_id]['tasks'][task_index]}",
-            reply_markup=InlineKeyboardMarkup(keyboard),
-    parse_mode="HTML"
+            text=f"📌 Завдання {task_index+1}:\n{status}{user_data[user_id]['tasks'][task_index]}",
+            reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
 def main() -> None:
@@ -206,5 +206,7 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
 
 
