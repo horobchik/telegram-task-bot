@@ -2,8 +2,11 @@ import random
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
-# Список усіх завдань
-ALL_TASKS = [
+# Глобальний словник для зберігання стану користувачів
+user_data = {}
+
+# Приклад завдань (у реальному коді додайте повний список)
+TASK_EXAMPLES = [
     "Прочитати 10 сторінок книги",
     "Зробити 20 віджимань",
     "Вивчити 5 нових слів англійською",
@@ -95,24 +98,36 @@ ALL_TASKS = [
     "Отримай будь-який смішний предмет"
 ]
 
-# Глобальний словник для зберігання стану користувачів
-user_data = {}
-
 def generate_tasks():
     """Генерує 6 унікальних завдань"""
-    return random.sample(ALL_TASKS, 6)
+    return random.sample(TASK_EXAMPLES, 6)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Обробка команди /start"""
     user_id = update.effective_user.id
-    user_data[user_id] = {
-        'tasks': generate_tasks(),
-        'statuses': ["➖"] * 6
-    }
-    await show_tasks(update, context, user_id)
+    
+    # Вітальне повідомлення з кнопкою
+    start_keyboard = [[InlineKeyboardButton("Почати", callback_data="start_tasks")]]
+    await update.message.reply_text(
+        text="Привіт! 👋\nЦей бот допоможе тобі з завданнями на день.",
+        reply_markup=InlineKeyboardMarkup(start_keyboard)
+    )
+    
+    # Повідомлення з правилами
+    rules_keyboard = [[InlineKeyboardButton("До завдань", callback_data="show_tasks")]]
+    await update.message.reply_text(
+        text="📜 Правила:\n1. Виконуй завдання\n2. Позначай виконані\n3. Можна заміняти завдання",
+        reply_markup=InlineKeyboardMarkup(rules_keyboard)
+    )
 
 async def show_tasks(update: Update, context: ContextTypes.DEFAULT_TYPE, user_id: int) -> None:
     """Показує список завдань з кнопками"""
+    if user_id not in user_data:
+        user_data[user_id] = {
+            'tasks': generate_tasks(),
+            'statuses': [""] * 6  # Пусті статуси на початку
+        }
+    
     tasks = user_data[user_id]['tasks']
     statuses = user_data[user_id]['statuses']
     
@@ -122,66 +137,70 @@ async def show_tasks(update: Update, context: ContextTypes.DEFAULT_TYPE, user_id
         row = [
             InlineKeyboardButton("✅", callback_data=f"done_{i}"),
             InlineKeyboardButton("❌", callback_data=f"delete_{i}"),
-            InlineKeyboardButton("♻️", callback_data=f"replace_{i}")
+            InlineKeyboardButton("🔁", callback_data=f"replace_{i}")
         ]
         keyboard.append(row)
     
     # Формуємо текст повідомлення
-    message_text = "📌 Ваші поточні завдання:\n\n" + "\n".join(
-        f"{i+1}. {status} {task}" for i, (task, status) in enumerate(zip(tasks, statuses)))
+    message_text = "📌 Ваші завдання на сьогодні:\n\n" + "\n".join(
+        f"{i+1}. {status}{task}" for i, (task, status) in enumerate(zip(tasks, statuses)))
     
-    # Відправляємо або оновлюємо повідомлення
     if update.callback_query:
         await update.callback_query.edit_message_text(
             text=message_text,
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
     else:
-        await update.message.reply_text(
+        await context.bot.send_message(
+            chat_id=user_id,
             text=message_text,
-            reply_markup=InlineKeyboardMarkup(keyboard))
-        
-async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Обробляє натискання кнопок"""
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+
+async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обробляє всі натискання кнопок"""
     query = update.callback_query
     await query.answer()
     
     user_id = update.effective_user.id
-    action, index = query.data.split('_')
-    index = int(index)
     
-    # Ініціалізуємо дані, якщо їх немає
-    if user_id not in user_data:
-        user_data[user_id] = {
-            'tasks': generate_tasks(),
-            'statuses': ["➖"] * 6
-        }
-    
-    # Обробляємо різні типи кнопок
-    if action == "done":
-        user_data[user_id]['statuses'][index] = "✅"
-    elif action == "delete":
-        user_data[user_id]['tasks'][index] = "[ВИДАЛЕНО]"
-        user_data[user_id]['statuses'][index] = "❌"
-    elif action == "replace":
-        current_tasks = user_data[user_id]['tasks']
-        available_tasks = [t for t in ALL_TASKS if t not in current_tasks]
-        if available_tasks:
-            user_data[user_id]['tasks'][index] = random.choice(available_tasks)
-            user_data[user_id]['statuses'][index] = "➖"
-    
-    await show_tasks(update, context, user_id)
+    if query.data == "start_tasks":
+        # Перехід від вітання до правил (вже оброблено в start)
+        return
+    elif query.data == "show_tasks":
+        await show_tasks(update, context, user_id)
+    else:
+        # Обробка кнопок завдань
+        action, index = query.data.split('_')
+        index = int(index)
+        
+        if user_id not in user_data:
+            user_data[user_id] = {
+                'tasks': generate_tasks(),
+                'statuses': [""] * 6
+            }
+        
+        if action == "done":
+            user_data[user_id]['statuses'][index] = "✅ "
+        elif action == "delete":
+            user_data[user_id]['statuses'][index] = "❌ "
+        elif action == "replace":
+            current_tasks = user_data[user_id]['tasks']
+            available_tasks = [t for t in TASK_EXAMPLES if t not in current_tasks]
+            if available_tasks:
+                user_data[user_id]['tasks'][index] = random.choice(available_tasks)
+                user_data[user_id]['statuses'][index] = ""
+        
+        await show_tasks(update, context, user_id)
 
 def main() -> None:
     """Запуск бота"""
-    # Використовуємо ваш токен
     application = Application.builder().token("7615231270:AAHWyL3-QGY6GUYFM46D5UP-dcAEQCymlEw").build()
     
-    # Додаємо обробники команд
+    # Додаємо обробники
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(CallbackQueryHandler(handle_button, pattern=r"^(done|delete|replace)_\d+$"))
+    application.add_handler(CallbackQueryHandler(button_handler))
     
-    # Запускаємо бота
     print("Бот запущений...")
     application.run_polling()
 
