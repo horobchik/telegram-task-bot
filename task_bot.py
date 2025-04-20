@@ -226,7 +226,7 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 def main() -> None:
     """Запуск бота"""
-    application = Application.builder().token("7676286073:AAGuYRv0bG7J0MG6RNjE4x1fTYszu4yhWQQ").build()
+    application = Application.builder().token("7632051113:AAFH8uSAGtOG464oyKf-Av4AzzX0hOnfQKs").build()
     
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(handle_button))
